@@ -1,0 +1,32 @@
+package com.cdac.controller;
+
+import com.cdac.Entity.Medicine;
+import com.cdac.Service.MedicineService;
+import com.cdac.dto.MedicineDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/medicines")
+public class MedicineController {
+
+    @Autowired
+    private MedicineService medicineService;
+
+
+//    @DeleteMapping("/{id}")
+//    public void delete(@PathVariable Long id) {
+//        medicineService.deleteMedicine(id);
+//    }
+
+
+//    @GetMapping
+//    public List<Medicine> getAll() {
+//        return medicineService.getAllMedicines();
+//    }
+
+}

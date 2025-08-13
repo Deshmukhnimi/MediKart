@@ -1,0 +1,16 @@
+package com.cdac.Service;
+
+import com.cdac.Entity.Order;
+import com.cdac.Entity.OrderStatusHistory;
+import com.cdac.Entity.Status;
+import com.cdac.dto.OrderDTO;
+
+import java.util.List;
+
+public interface OrderService {
+    
+    List<OrderDTO> getAllOrders();
+    void updateOrderStatus(Long orderId, Status status);
+	void cancelOrder(Long orderId);
+
+}

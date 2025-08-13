@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin - Users</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../style.css"></head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart (Admin)</h1></div>
+    <nav>
+      <a href="medicines.html" class="btn ghost">Medicines</a>
+      <a href="orders.html" class="btn ghost">Orders</a>
+      <a href="payments.html" class="btn ghost">Payments</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>All Users</h2>
+    <div id="users"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_ADMIN'])) { /* redirect handled */ }
+
+  async function loadUsers() {
+    try {
+      const users = await GET('/admin/users');
+      if(!users || users.length===0) { document.getElementById('users').innerHTML = '<div class="card">No users found.</div>'; return; }
+      const out = users.map(u=>`<div class="card"><div><strong>${u.name}</strong> <span class="kicker">${u.email}</span></div><div class="faint">${u.category} • ${u.contactNo || ''}</div></div>`).join('');
+      document.getElementById('users').innerHTML = out;
+    } catch (e) { alert('Failed to load users: ' + e.message); }
+  }
+  loadUsers();
+</script>
+</body>
+</html>

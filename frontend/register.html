@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Register - MediKart</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand small">
+      <img src="assets/logo.png" alt="logo" class="logo">
+      <h1>MediKart</h1>
+    </div>
+    <nav>
+      <a href="index.html" class="btn ghost">Home</a>
+      <a href="login.html" class="btn">Login</a>
+    </nav>
+  </header>
+
+  <main class="auth-container">
+    <form id="registerForm" class="card auth-card">
+      <h2>Create Account</h2>
+      <label>Full name
+        <input name="name" type="text" required placeholder="John Doe">
+      </label>
+      <label>Email
+        <input name="email" type="email" required placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input name="password" type="password" required placeholder="Choose a password">
+      </label>
+      <label>Contact No.
+        <input name="contactNo" type="text" placeholder="+91-XXXXXXXXXX">
+      </label>
+      <label>Address
+        <input name="address" type="text" placeholder="Street, City">
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn large">Create account</button>
+        <a class="link muted" href="login.html">Already have account?</a>
+      </div>
+      <div id="regError" class="error" style="display:none;"></div>
+    </form>
+  </main>
+
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Your Orders</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../style.css"></head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart</h1></div>
+    <nav>
+      <a href="medicines.html" class="btn ghost">Browse</a>
+      <a href="cart.html" class="btn ghost">Cart</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Your Orders</h2>
+    <div id="orders"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_USER','ROLE_ADMIN'])) throw new Error('Not authorized');
+  async function loadOrders(){
+    try {
+      const orders = await GET('/user/orders');
+      if(!orders || orders.length===0) {
+        document.getElementById('orders').innerHTML = '<div class="card">No orders yet.</div>'; return;
+      }
+      const out = orders.map(o => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong>Order #${o.orderId}</strong> <div class="kicker">Placed: ${fmtDate(o.orderDate)}</div></div>
+            <div><span class="badge">${o.status}</span></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div class="muted">Total: ₹ ${o.totalAmount?.toFixed(2)}</div>
+            <div style="margin-left:auto">
+              <button class="btn small" onclick="viewStatus(${o.orderId})">Status History</button>
+              <button class="btn ghost small" onclick="cancel(${o.orderId})">Cancel</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('orders').innerHTML = out;
+    } catch (e) { alert('Unable to fetch orders: ' + e.message); }
+  }
+  function viewStatus(orderId){
+    window.location.href = `order-history.html?orderId=${orderId}`;
+  }
+  async function cancel(orderId){
+    if(!confirm('Cancel this order?')) return;
+    try {
+      await PUT('/user/orders/' + orderId + '/cancel');
+      alert('Order cancelled');
+      loadOrders();
+    } catch (e) { alert('Cancel failed: ' + e.message); }
+  }
+  loadOrders();
+</script>
+</body>
+</html>

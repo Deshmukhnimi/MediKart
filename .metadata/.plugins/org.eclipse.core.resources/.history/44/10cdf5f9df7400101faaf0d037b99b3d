@@ -1,0 +1,17 @@
+package com.cdac.dto;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+public class ReceiptDownloadDto {
+    private Long orderId;
+    private String userName;
+    private LocalDate orderTime;
+    private BigDecimal totalAmount;
+    private String paymentMode;
+    private List<String> medicines;
+}

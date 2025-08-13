@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><title>Medicines - MediKart</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart</h1></div>
+    <nav>
+      <a href="cart.html" class="btn ghost">Cart</a>
+      <a href="orders.html" class="btn ghost">Orders</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Available Medicines</h2>
+    <div id="medList" class="grid"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  // ensure only USER or ADMIN allowed (admin can also view)
+  if (!requireAuth(['ROLE_USER','ROLE_ADMIN'])) throw new Error('Not authorized');
+
+  async function load() {
+    try {
+      const meds = await GET('/user/medicines');
+      const out = meds.map(m => `
+        <div class="medicine-card">
+          <h3>${m.name}</h3>
+          <div class="kicker">₹ ${m.price?.toFixed(2) || '—'} • Stock: ${m.stock ?? '—'}</div>
+          <div class="meta">${m.description || ''}</div>
+          <div class="row">
+            <div class="kicker">Manufacturer: ${m.manufacturer || '—'}</div>
+            <div class="kicker">Expiry: ${fmtDate(m.expiryDate)}</div>
+          </div>
+          <div class="actions">
+            <input type="number" id="q_${m.medicineId}" value="1" min="1" class="small" style="width:84px">
+            <button class="btn small" onclick="addToCart(${m.medicineId})">Add to cart</button>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('medList').innerHTML = out;
+    } catch (e) {
+      alert('Unable to load medicines: ' + e.message);
+    }
+  }
+
+  async function addToCart(medId) {
+    const q = parseInt(document.getElementById('q_' + medId).value || '1');
+    try {
+      await POST('/user/cart/add', { medicineId: medId, quantity: q });
+      alert('Added to cart');
+    } catch (e) {
+      alert('Add failed: ' + e.message);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

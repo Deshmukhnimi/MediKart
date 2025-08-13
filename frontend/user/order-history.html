@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Order Status History</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../style.css"></head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart</h1></div>
+    <nav>
+      <a href="orders.html" class="btn ghost">Back</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Order Status History</h2>
+    <div id="history"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_USER','ROLE_ADMIN'])) throw new Error('Not authorized');
+  const params = new URLSearchParams(location.search);
+  const orderId = params.get('orderId');
+
+  async function loadHistory(){
+    try {
+      const hist = await GET(`/user/orders/${orderId}/status`);
+      if(!hist || hist.length===0) {
+        document.getElementById('history').innerHTML = '<div class="card">No history available.</div>';
+        return;
+      }
+      const out = hist.map(h => `<div class="card"><div><strong>${h.oldStatus} → ${h.newStatus}</strong></div><div class="kicker">${new Date(h.changedAt).toLocaleString()}</div></div>`).join('');
+      document.getElementById('history').innerHTML = out;
+    } catch (e) { alert('Unable to load history: ' + e.message); }
+  }
+  loadHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin - Payments</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../style.css"></head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart (Admin)</h1></div>
+    <nav>
+      <a href="users.html" class="btn ghost">Users</a>
+      <a href="medicines.html" class="btn ghost">Medicines</a>
+      <a href="orders.html" class="btn ghost">Orders</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Payments</h2>
+    <div id="paymentsDiv"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_ADMIN'])) throw new Error('Not authorized');
+
+  async function loadPayments() {
+    try {
+      const list = await GET('/admin/payments');
+      if(!list || list.length===0){ document.getElementById('paymentsDiv').innerHTML = '<div class="card">No payments</div>'; return; }
+      const out = list.map(p => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between">
+            <div><strong>Payment #${p.paymentId}</strong><div class="kicker">Order: ${p.orderId} • Amount: ₹${p.amount?.toFixed(2)}</div></div>
+            <div><span class="badge">${p.paystatus}</span></div>
+          </div>
+          <div style="margin-top:8px">
+            <label>Status:
+              <select id="pay_${p.paymentId}" class="small">
+                <option>SUCCESSFULL</option><option>FAILED</option><option>PENDING</option><option>PAID</option>
+              </select>
+            </label>
+            <button class="btn small" onclick="updatePayment(${p.paymentId})">Update</button>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('paymentsDiv').innerHTML = out;
+    } catch (e) { alert('Load failed: ' + e.message); }
+  }
+
+  async function updatePayment(id) {
+    const val = document.getElementById('pay_' + id).value;
+    try {
+      await PUT(`/admin/payments/${id}/status?status=${val}`);
+      alert('Updated');
+      loadPayments();
+    } catch (e) { alert('Update failed: ' + e.message); }
+  }
+
+  loadPayments();
+</script>
+</body>
+</html>

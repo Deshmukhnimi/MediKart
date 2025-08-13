@@ -1,0 +1,86 @@
+package com.cdac.controller;
+
+import com.cdac.Entity.Category;
+import com.cdac.Entity.Order;
+import com.cdac.Entity.OrderStatusHistory;
+import com.cdac.Entity.User;
+import com.cdac.Exception.ResourceNotFoundException;
+import com.cdac.Service.OrderService;
+import com.cdac.dao.OrderRepository;
+import com.cdac.dao.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderService orderService;
+    
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+
+    @PostMapping
+    public Order place(@RequestBody Order order) {
+        return orderService.placeOrder(order);
+    }
+
+    @PutMapping("/{id}")
+    public Order update(@PathVariable Long id, @RequestBody Order order) {
+        return orderService.updateOrder(id, order);
+    }
+
+   
+    @GetMapping("/{id}")
+    public Order get(@PathVariable Long id) {
+        return orderService.getOrderById(id);
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Order> getUserOrders(@PathVariable Long userId) {
+        return orderService.getOrdersByUserId(userId);
+    }
+    
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> getOrderStatusHistory(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName(); // From JWT
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Admins can access any order
+        if (user.getCategory() != Category.ADMIN) {
+            // Regular users can only access their own orders
+            if (!order.getUser().getUserId().equals(user.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
+        }
+
+        List<OrderStatusHistory> history = orderService.getOrderStatusHistory(id);
+        return ResponseEntity.ok(history);
+    }
+    
+    
+    @PutMapping("/orders/{id}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long id) {
+        orderService.cancelOrder(id);
+        return ResponseEntity.ok("Order has been cancelled.");
+    }
+
+}

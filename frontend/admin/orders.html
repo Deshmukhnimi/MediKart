@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin - Orders</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../style.css"></head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart (Admin)</h1></div>
+    <nav>
+      <a href="users.html" class="btn ghost">Users</a>
+      <a href="medicines.html" class="btn ghost">Medicines</a>
+      <a href="payments.html" class="btn ghost">Payments</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>All Orders</h2>
+    <div id="ordersList"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_ADMIN'])) throw new Error('Not authorized');
+
+  async function loadOrders(){
+    try {
+      const orders = await GET('/admin/orders');
+      if(!orders || orders.length===0) { document.getElementById('ordersList').innerHTML = '<div class="card">No orders</div>'; return; }
+      const out = orders.map(o => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between">
+            <div><strong>Order #${o.orderId}</strong><div class="kicker">User: ${o.userId} • ${fmtDate(o.orderDate)}</div></div>
+            <div><span class="badge">${o.status}</span></div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <label>Change status:
+              <select id="s_${o.orderId}" class="small">
+                <option>ORDERED</option><option>SHIPPED</option><option>DELIVERED</option><option>CANCELLED</option>
+              </select>
+            </label>
+            <button class="btn small" onclick="changeStatus(${o.orderId})">Update</button>
+            <button class="btn ghost small" onclick="cancel(${o.orderId})">Cancel</button>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('ordersList').innerHTML = out;
+    } catch (e) { alert('Error: ' + e.message); }
+  }
+
+  async function changeStatus(id){
+    const sel = document.getElementById('s_' + id);
+    const status = sel.value;
+    try {
+      await PUT(`/admin/orders/${id}/status?status=${status}`);
+      alert('Updated');
+      loadOrders();
+    } catch (e) { alert('Update failed: ' + e.message); }
+  }
+  async function cancel(id){
+    if(!confirm('Cancel order?')) return;
+    try {
+      await PUT(`/admin/orders/${id}/cancel`);
+      alert('Cancelled');
+      loadOrders();
+    } catch (e) { alert('Cancel failed: ' + e.message); }
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

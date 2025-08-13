@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><title>Cart - MediKart</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand small"><img src="../assets/logo.png" class="logo"><h1>MediKart</h1></div>
+    <nav>
+      <a href="medicines.html" class="btn ghost">Browse</a>
+      <a href="orders.html" class="btn ghost">Orders</a>
+      <button onclick="logout()" class="btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Your Cart</h2>
+    <div id="cartWrap"></div>
+  </main>
+
+<script src="../api.js"></script>
+<script src="../utils.js"></script>
+<script>
+  if (!requireAuth(['ROLE_USER','ROLE_ADMIN'])) throw new Error('Not authorized');
+
+  async function refreshCart() {
+    try {
+      const cart = await GET('/user/cart');
+      render(cart);
+    } catch (e) {
+      alert('Failed to load cart: ' + e.message);
+    }
+  }
+
+  function render(cart) {
+    if(!cart || !cart.items || cart.items.length===0) {
+      document.getElementById('cartWrap').innerHTML = '<div class="card">Your cart is empty. <a href="medicines.html">Browse medicines</a></div>';
+      return;
+    }
+    let rows = `<table class="table"><thead><tr><th>Medicine</th><th>Unit</th><th>Qty</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
+    cart.items.forEach(it=>{
+      rows += `<tr>
+        <td>${it.medicineName}</td>
+        <td>₹ ${it.unitPrice?.toFixed(2)}</td>
+        <td><input style="width:72px" id="qty_${it.cartItemId}" value="${it.quantity}" type="number" min="1"></td>
+        <td>₹ ${it.totalPrice?.toFixed(2)}</td>
+        <td>
+          <button class="btn small" onclick="update(${it.cartItemId})">Update</button>
+          <button class="btn ghost small" onclick="remove(${it.cartItemId})">Remove</button>
+        </td>
+      </tr>`;
+    });
+    rows += `</tbody></table>
+      <div class="total-row">
+        <div><strong>Total</strong></div>
+        <div><strong>₹ ${cart.totalAmount?.toFixed(2)}</strong></div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn large" onclick="placeOrder()">Place Order</button>
+      </div>
+    `;
+    document.getElementById('cartWrap').innerHTML = rows;
+  }
+
+  async function update(cartItemId) {
+    const qty = parseInt(document.getElementById('qty_' + cartItemId).value || '1');
+    try {
+      await PUT('/user/cart/update', { cartItemId, newQuantity: qty });
+      await refreshCart();
+    } catch (e) { alert('Update failed: ' + e.message); }
+  }
+
+  async function remove(cartItemId) {
+    if(!confirm('Remove item?')) return;
+    try {
+      await DELETE('/user/cart/remove/' + cartItemId);
+      await refreshCart();
+    } catch (e) { alert('Remove failed: ' + e.message); }
+  }
+
+  async function placeOrder() {
+    // ask for payment method choice
+    const method = prompt('Payment method (CARD, COD, UPI, NET_BANKING)', 'COD');
+    if(!method) return;
+    try {
+      const res = await POST('/user/place-order', { method });
+      alert('Order placed: id ' + res.orderId);
+      window.location.href = 'orders.html';
+    } catch (e) {
+      alert('Place order failed: ' + e.message);
+    }
+  }
+
+  refreshCart();
+</script>
+</body>
+</html>
